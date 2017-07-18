@@ -1,0 +1,11 @@
+name: tmwp_shiny_app_-_imdb
+title: TMWP Shiny App - IMDB
+account: themitchworkspro
+server: shinyapps.io
+appId: 197893
+bundleId: 908149
+url: https://themitchworkspro.shinyapps.io/tmwp_shiny_app_-_imdb/
+when: 1500417663.12292
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data_srv/.DS_Store

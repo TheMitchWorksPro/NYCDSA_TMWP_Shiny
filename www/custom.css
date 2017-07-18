@@ -1,0 +1,78 @@
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+div, td {
+  padding-left: 5px;
+  padding-right: 5px;	
+}
+
+h1 {
+	font-size: 80;
+	color: navy;
+}
+
+.bodyText {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-size: 16px;
+  color: blue;
+}
+
+/* for horizontal rule tabs */
+
+.sidePhr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid gray;
+    margin: 1em 0;
+    padding: 0; 
+}
+
+.mainBxhr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid navy;
+    /* margin: 1em 0; */
+    padding: 0; 
+}
+
+
+/* Stack Overflow Recommendation to Make Table Cell width static in Shiny */
+table.fixed { table-layout:fixed; }
+table.fixed td { overflow: hidden; }
+
+/* fix specific elements individually by element ID */
+/* if style breaks - check if output$variable got renamed */
+
+/*
+#datRecSum2.fixed {
+  color: magenta;
+  font-weight: bold;
+  width: 60px;
+  max-width: 60px;
+
+} */
+
+/*
+#datRecSum2 {
+   position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 700px;
+    border: 12px solid red;  
+    z-index: -1;
+}
+*/
+
+/*  #73AD21  */
+
+/* help writing this file:
+   - https://stackoverflow.com/questions/7721919/span-in-a-tag-with-different-style
+   - https://www.w3schools.com/cssref/default.asp
+   - for "indenting not padding" -   # text-indent: 50px;
+
+*/  
