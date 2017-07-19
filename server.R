@@ -15,31 +15,6 @@ library(grid)  # for x and y axis tickmarks
 # library(googleVis)
 # suppressPackageStartupMessages(library(googleVis))
 
-# for opening histogram ... movies over time ...
-dataMinYr <- min(IMDB_Main_tl_flds$YR_Released, na.rm=TRUE)
-dataMaxYr <- max(IMDB_Main_tl_flds$YR_Released, na.rm=TRUE)
-
-# Record set summary for Data Tab (shows true record count for reach data set in use)
-recSummary <- IMDB_AllData %>% group_by(.,Record) %>% summarise(.,recCount = n())
-
-# Reusable Globals:
-  
-generate_YrSeqEnd <- function(x){
-  # this will allow the code to be updatable when the data changes
-  # calculate the sequence range allowable for main histogram to work
-  rtnVal = dataMinYr
-  while (rtnVal < dataMaxYr) {
-    rtnVal = rtnVal + x
-  }
-  return(rtnVal)
-}
-
-
-dt_plngth <- 25  # change this number to reset default for all DT:Data Tables displayed in the app
-hist_data <- IMDB_Main_tl_flds$YR_Released    
-            # put this in var so only need to query for it once
-             # range aquired by first looking at default plot w/ no bins
-
 shinyServer(function(input, output){
 
   # main panel items (visible when dashboard icon is selected)
@@ -53,7 +28,6 @@ shinyServer(function(input, output){
       # scale_y_continuous(breaks=seq(0, 350, 10)) +
       scale_x_continuous(breaks=seq(1910, 2020, 10))
     
-
     movieFreqByYrHist2
   })
 
@@ -64,13 +38,14 @@ shinyServer(function(input, output){
       geom_bar(colour = "navy", fill = input$colorSlxn, stat="identity") +   # input$colorSlxn "darkgreen"
       coord_flip() +
       labs(title=paste0("In This Data Set:")) +
-      labs(x="Record Source (Which IMDB Sourced Record Set)", y="Number of Records") + theme_bw()
+      labs(x="Record Source (Which IMDB Sourced Record Set)", y="Number of Records") + theme_bw() # +
+      # scale_x_continuous(breaks=c(0, 1000, 2000, 3000, 4000, 5000))
 
     movieFreqByRecHist
   })
     
   output$table <- DT::renderDataTable({
-    datatable(IMDB_AllData, rownames=FALSE, filter = 'bottom', 
+    datatable(IMDB_AllData, rownames=FALSE, filter = 'top', 
               options = list(pageLength = dt_plngth, autoWidth = TRUE)) %>% 
       formatStyle(input$selected,
                   background="skyblue", fontWeight='bold')
@@ -99,7 +74,7 @@ shinyServer(function(input, output){
   })
   
   output$datRecSum2c <- renderPrint ({
-    summary_data_set1()[, 2]  # attempt to do just one col at a time not working
+    summary_data_set1()[, 4]  # attempt to do just one col at a time not working
                               # return here later ...
   })
   

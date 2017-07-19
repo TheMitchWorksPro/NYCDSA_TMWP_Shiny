@@ -30,7 +30,6 @@ appImages <- c("https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeup
                "IMDB_2017ReleasesPage.png",
                "MoviesIcon.png",
                "movies_splashImage3.jpg") 
-
 # legend:
 #  * 1 = NYC DSA Logo
 #  * 2 = IMDB 2017 Releases Page image
@@ -60,6 +59,35 @@ dataChoices <- c(unique(IMDB_topLsts$Record), IMDB_Main_tl_flds$Record[1])
   # assert: this generates 4 values from first table and one more from second table
 
 colorChoices <- c("cyan", "blue", "purple", "magenta", "red", "orange", "yellow", "darkgreen", "green", "grey", "darkgrey", "brown")
+
+######## created in server.R ... moved to global.R based on feedback ######
+# for opening histogram ... movies over time ...
+dataMinYr <- min(IMDB_Main_tl_flds$YR_Released, na.rm=TRUE)
+dataMaxYr <- max(IMDB_Main_tl_flds$YR_Released, na.rm=TRUE)
+
+# Record set summary for Data Tab (shows true record count for reach data set in use)
+recSummary <- IMDB_AllData %>% group_by(.,Record) %>% summarise(.,recCount = n())
+
+# Reusable Globals:
+
+generate_YrSeqEnd <- function(x){
+  # this will allow the code to be updatable when the data changes
+  # calculate the sequence range allowable for main histogram to work
+  rtnVal = dataMinYr
+  while (rtnVal < dataMaxYr) {
+    rtnVal = rtnVal + x
+  }
+  return(rtnVal)
+}
+
+
+dt_plngth <- 25  # change this number to reset default for all DT:Data Tables displayed in the app
+hist_data <- IMDB_Main_tl_flds$YR_Released    
+# put this in var so only need to query for it once
+# range aquired by first looking at default plot w/ no bins
+
+############ moved from server.R ends here ###########
+
 
 
 

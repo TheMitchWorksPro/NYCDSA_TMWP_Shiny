@@ -78,7 +78,8 @@ body <- dashboardBody(
             fluidRow(h1("IMDB Movie Data"), hr(class="mainBxhr"),
               box(width=4, tableOutput("datRecSum"),
               # invisible table to stop "fluid motion" on this element
-              tags$table(tags$tr(tags$td(width="600px",hr()),tags$td(width="*")))
+              tags$table(tags$tr(tags$td(width="600px",
+                                 p(class="bodyText2", br(), aboutDataOnVis)),tags$td(width="*")))
               ),
               box(width=8,   
               plotOutput("mvFrqRecHst")
@@ -107,12 +108,13 @@ body <- dashboardBody(
                    tags$td(width="20px", valign="Top",
                       h2("Data Summary:"),
                       verbatimTextOutput("datRecSum2"), br(),
-                      verbatimTextOutput("datRecSum2b"), br() # ,     # ,
+                      verbatimTextOutput("datRecSum2b"), br() #,
                       # verbatimTextOutput("datRecSum2c"), br(),  # formatting issue
                       # verbatimTextOutput("datRecSum2d"), br()   # return to this later (keep 2 col sets for now)
                       
                       # idea:  develop this when there is content to hide ...
                       # actionButton(inputId="moreInfo1", label="Would You Like To Know More? ...", icon=map)
+                      
                       ),
                    tags$td(width="700", valign="Top", h2("Movie Duration (Runtime) Over Time"),
                            plotOutput("ggpltRT1"),       # YR Released / Avg Runtime line plot

@@ -20,6 +20,12 @@ h1 {
   color: blue;
 }
 
+.bodyText2 {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-size: 14px;
+  color: blue;
+}
+
 /* for horizontal rule tabs */
 
 .sidePhr {
