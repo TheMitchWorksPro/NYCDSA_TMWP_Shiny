@@ -1,0 +1,184 @@
+---
+title: "Shiny Project - IMDB - Data Preparation Step 1"
+author: "Mitch Abramson"
+date: "July, 2017"
+output: html_document
+---
+
+### Notes
+
+- IMDB has a list of the top [250 movies](http://www.imdb.com/chart/top). 
+- This file contains code extracted and updated from a previous effort for use in the shiny_IMDB project.
+- As per comments, multiple "hot list" on IMDB, (top 250, bottom 100, ...) were extracted from the web using this code
+
+```{r sourceDataProb1, warning=F, message=F}
+
+library(RCurl)  # RCurl might be needed for this code
+library(XML)    # XML is the main workhorse of parsing HTML pages through XPath to extract specific fields
+                # inputs are assumed to be HTML pages with tables on them
+library(dplyr)  # need dplyer or magrittr for %>%
+
+# uncomment a URL and uncomment other URLs to scrape a particular data set
+# last URL used with this script is uncommented
+
+# movies_url       <- "http://www.imdb.com/chart/top"  # renamed to head off conflict w/ base 'url'
+# movies_url       <- "http://www.imdb.com/chart/bottom" 
+# movies_url       <- "http://www.imdb.com/chart/top-english-movies"
+movies_url         <- "http://www.imdb.com/india/top-rated-indian-movies/"
+
+```
+Get the data.  Need help with the xpath?  Here are the links I used:
+
+  - [w3c exaplains substring functions](https://www.w3.org/TR/1999/REC-xpath-19991116/#function-substring-before)
+  - [stackoverflow example of substring-before / substring-after](http://stackoverflow.com/questions/4720480/xpath-select-only-part-of-an-attribute)
+
+Analysis of the target HTML:
+
+  - movie name: \<td class="titleColumn"\>\<a\>Movie Title ...
+  - movie release yr: \<td class="titleColumn"\>\<span class="secondaryInfo"\>(1994)\</span\>
+  - movie ranking: \<td class="ratingColumn imdbRating"\>\<strong title="meta info"\>9.2\</strong\>
+  - movie ranking weight: ...\<strong title="9.2 based on 1,771,990 user ratings"\>...
+  - movie id: <td class="ratingColumn"><div ... data-titleid="tt0111161"> (first div)
+
+```{r, echo=T, eval=T}
+# required libraries loaded in previous cell
+
+print("Inputs to Data Extraction:")
+movies_url    # show url being used in code that follows
+
+IMDB_mvNm_xPath <- '//td[@class="titleColumn"]/a'
+IMDB_mvYr_xPath <- '//td[@class="titleColumn"]/span[@class="secondaryInfo"]'
+IMDB_mvRk_xPath <- '//td[@class="ratingColumn imdbRating"]/strong'
+IMDB_mvID_xPath <- '//td[@class="ratingColumn"]/div[1]'
+
+# show xpaths ahead of using them:
+IMDB_mvNm_xPath
+IMDB_mvYr_xPath
+IMDB_mvRk_xPath
+IMDB_mvID_xPath
+
+```
+
+```{r}
+
+# function to create each cell of our data set from the IMDB HTML:
+
+vectorize_xml_webCell <- function(src_url, src_xpath) {
+  htmlDataVector = c()
+  htmlDataVector <- getURL(src_url) %>%
+                    htmlParse(.) %>%
+                    getNodeSet(., src_xpath) %>%
+                    sapply(., xmlValue)
+  
+  return(htmlDataVector)
+}
+
+```
+
+```{r}
+
+vectorize_xml_webCellAttr <- function(src_url, src_xpath, attrName) {
+  htmlDataVector = c()
+  htmlDataVector <- getURL(src_url) %>%
+                    htmlParse(.) %>%
+                    getNodeSet(., src_xpath) %>%
+                    sapply(., xmlGetAttr, attrName)
+                    # xmlGetAttr is the function to extract data from the attrName on the node set
+  
+  return(htmlDataVector)
+}
+
+```
+
+```{r movieVectors, echo=T, eval=T}
+
+movie_names      <- vectorize_xml_webCell(movies_url, IMDB_mvNm_xPath)
+movie_release_yr <- vectorize_xml_webCell(movies_url, IMDB_mvYr_xPath) %>%
+                    substring(., 2, nchar(.)-1) %>%
+                    as.integer(.)
+movie_rating     <- vectorize_xml_webCell(movies_url, IMDB_mvRk_xPath) %>%
+                    as.double(.)                                     # convert to numbers
+movie_rating_wt  <- vectorize_xml_webCellAttr(movies_url, IMDB_mvRk_xPath, "title") %>%
+                    gsub("\\d.\\d based on\\s*", "", .) %>%
+                    gsub("\\s*user ratings\\s*", "", .) %>%
+                    gsub("\\,", "", .) %>%
+                    as.integer(.)
+                    
+             # how many ratings went into the result
+             # extra info Mitch would want if doing this project in the real world
+
+movie_ID         <- vectorize_xml_webCellAttr(movies_url, IMDB_mvID_xPath, "data-titleid") 
+             # this should help with problem 5 and beyond
+
+# test the results ... let's just look at 5 return values and the count from each item
+print("Quick test of the data:")
+movie_names[1:5]
+movie_release_yr[1:5]
+movie_rating[1:5]
+movie_rating_wt[1:5]
+movie_ID[1:5]
+
+```
+
+```{r}
+
+# think of problem1 as the data scraping problem to solve
+# problem1_data is the output of this script to write to csv for use in data projects
+
+problem1_data = data.frame(
+  Movie_Title = movie_names,
+  YR_Released = movie_release_yr,
+  Rating = movie_rating,
+  Num_Reviews = movie_rating_wt,
+  Movie_ID = movie_ID,
+  stringsAsFactors = FALSE
+)
+
+head(problem1_data)
+
+```
+
+```{r wholeDF, echo=FALSE, eval=FALSE}
+problem1_data
+
+```
+
+```{r}
+
+# if not using hard coded paths - seeing current working directory before performing write is a good idea
+# fullFilePath variable below may negate need for this cell
+
+getwd()
+
+```
+
+```{r}
+# save data frame to csv:
+
+# set shiny project path on computer here:
+# ------------------------------------------
+fileDir <- "/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/"
+
+# 
+# fullFilePath <- paste0(fileDir, 'IMDB_Top250movies.csv')
+# fullFilePath <- paste0(fileDir, 'IMDB_Bottom250movies.csv')
+# fullFilePath <- paste0(fileDir, 'IMDB_Top250Engmovies.csv')
+fullFilePath <- paste0(fileDir, 'IMDB_Top250Indianmovies.csv')
+
+write.csv(problem1_data, file=fullFilePath)              
+
+```
+
+Output files shown above were used as inputs to next step in data preparation process.  These files were manually edited
+into files of the same name but ending in "2".  The manual edit added a simple column identifying which top or bottom list
+data originated from so we can track this later in our process and for use in the project.
+
+A future edit of this code should probably automate this step.
+
+```{r, eval=FALSE, include=FALSE}
+
+# source file for this content from past effort:
+# MLA_Homework_Week3a_Web_Scraping_and_dplyer-copy.Rmd (or maybe without "-copy")
+
+```
+

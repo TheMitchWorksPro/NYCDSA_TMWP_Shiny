@@ -1,0 +1,356 @@
+---
+title: "Shiny Project - IMDB - Data Preparation Step 2"
+author: "Mitch Abramson"
+date: "July, 2017"
+output: html_document
+---
+
+### Notes
+
+The [OMDB API](http://www.omdbapi.com/) is an open API to IMDB.  IMDB neither supports nor endorses its usage.
+You will need to go to their website and get an API key if you want to edit and reuse this code.  This code was used in step 2 of the process of data prep for the Shiny IMDB Movies Data project.  A good example movie to use in testing is "Shawshank Redemption" which has a test URL like this:
+
+http://www.omdbapi.com/?t=the+shawshank+redemption&y=1994&type=movie, ... see PDF for JSON example.
+
+The above URL generates a JSON file which this code then parses into a spreadsheet record.  Records have to be obtained one at a time
+through the API, so the delay code with a recommended setting of at least 3 seconds between each record is recommended.  This is to prevent
+the website from getting overwhelmed by too many hits too fast which could bring down the site.
+
+We want to extract data, not simulate a DDOS attack.
+
+Resources that may help in actually parsing the json into something useful for future work on this code:
+
+  - [RJSONIO package on the web](https://cran.r-project.org/web/packages/RJSONIO/RJSONIO.pdf)
+
+
+```{r}
+getwd()
+```
+
+
+```{r setupLibraries, warning=F, message=F}
+
+# libraries that are needed or might be needed:
+
+library(RCurl)
+library(XML)
+library(dplyr)   # need dplyer or magrittr for %>%
+library(ggplot2) # used in answer to problem 8
+library(RCurl)
+library(RJSONIO)
+library(curl)     # issues w/ RJSOJIO resulted in these libraries being added
+library(jsonlite) # it may be possible to run this code with just curl and jsonlite
+                  # as opposed to RJSONIO and RCurl
+
+
+# theory:  data.table might interfere with this ...
+
+```
+
+
+```{r problem4, echo=T, eval=T, message=FALSE, warning=FALSE}
+
+## set up ahead of web extraction code ...
+
+### YOUR OMDB API KEY NEEDS TO GO HERE! ####
+## replace this value with your api key or the code will not work:
+OMDBAPI_key <- "fakeID01"
+
+movieURL <- paste0("http://www.omdbapi.com/?t=lord+of+the+rings&y=&type=movie&plot=short&r=json&tomatoes=true&apikey=", OMDBAPI_key)
+
+fromurl <- function(finalurl) {
+  web        <- getURL(finalurl)
+  rawContent <- fromJSON(web)
+  
+  # research when raw$Title failed: https://stat.ethz.ch/pipermail/r-help/2008-November/179050.html
+  # more research: http://stackoverflow.com/questions/21567793/problems-reading-json-file-in-r
+  
+  movie_name <- rawContent['Title']
+  movie_plot <- rawContent['Plot']
+  movie_awards <- rawContent['Awards']
+
+  result <- list(Title = movie_name, Plot = movie_plot, Awards = movie_awards)
+  names(result) <- c('Title', 'Plot', 'Awards')
+  return(result)
+}
+
+# tests on output
+# class(out1)
+# typeof(out1)
+
+out1 <- fromurl(movieURL)
+out1
+
+```
+
+Sys.sleep function is used to cause delay in the extradtion process.  This is deliberate.  Do not run this code with a setting
+of less than 3 seconds between each record you are asking the code to return.
+
+```{r p5addTimeDelayFunc, echo=T, eval=T}
+
+causeDelay <- function(x, showDelay = FALSE)
+{
+  p1 <- proc.time()
+  Sys.sleep(x) # nothing happens for x seconds
+  if (showDelay == TRUE) {
+    proc.time() - p1
+  }
+} 
+
+listOfOutputs <- list("First Test:", causeDelay(.1, TRUE),  # test with 3.7 
+                      "Text after delay",
+                      "second test:", causeDelay(.1),
+                      "Text after delay")
+
+# list created as experiment to better control the test output
+listOfOutputs
+
+```
+
+
+```{r p5getListOfMovies, echo=T, eval=T}
+# import csv created from data frame previous data preparation steps
+
+filePath = "/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/"
+
+# Uncomment the right file to parse an input file through this script:
+
+# main data input files used:
+# ---------------------------
+# from earlier web scraping
+# fileNameStart = "IMDB_Top250movies2"       # this set is top 250 or 100 on various pages of IMDB
+# fileNameStart = "IMDB_Top250Indianmovies2" #   may have some overlap with other top files
+# fileNameStart = "IMDB_Bottom250movies2"    #   is bottom so should be unique
+# fileNameStart = "IMDB_Top250Engmovies2"    #   lot of overlap w/ top 250 from this file
+                                             #   Note: kaggle data stops at 2016 - these lists are current
+                                             #         there
+
+# manually created from IDs in Kaggle 5000 data to use as input:
+# -----
+# fileNameStart = "TestDoc2_KaggleData"      # movie ids from link to git on Kaggle site
+# fileNameStart = "IMDB_OMDB_Kaggle_TestSet" # these files parse IDs extracted from github of kaggle poster
+# fileNameStart = "TestDoc2_KaggleData68"
+# fileNameStart = "TestDoc2_KaggleDataHUGE"
+
+# During debugging ... some records originally did not process.  
+# ----
+# Their IDs were put into these files to add more data to our data set.  
+# Code was then debugged and most of the valid IDs in this file were able to be included in the project
+# Some IDs proved to be invalid (must have changed since used by Kaggle) and had to be left out.
+
+# fileNameStart = "IMDB_ErrorLogIDs1"
+# fileNameStart = "IMDB_ErrorLogIDs2"        # this one should be just a few records but w/ 40 cols instead of 38
+                                             # deleted garbage that got created on the end of this file
+
+
+fileName = paste0(fileNameStart, ".csv")
+fullFilePath = paste0(filePath, fileName)
+
+result = tryCatch({
+  IMDB_recsdf <- read.csv(fullFilePath, header=TRUE, row.names=1,
+                            stringsAsFactors = FALSE)
+}, error = function(e) {
+  IMDB_recsdf <- read.csv(fullFilePath, header=TRUE, 
+                            stringsAsFactors = FALSE)
+})
+
+head(IMDB_recsdf)
+IMDB_mvIDs <- unique(IMDB_recsdf['Movie_ID'])
+   # If any accidental duplicates, unique() scrubs them off by dupe ID
+IMDB_mvIDs[1:5,]
+paste0("Number Records: ",  NROW(IMDB_mvIDs))
+
+```
+
+Functions to build each row of our final data frame of movie data. 
+This cell also sets up the data frame with the first record in it:
+
+```{r p5jLiteAns, message=FALSE, warning=FALSE, echo=TRUE, eval=TRUE}
+# sample ids: tt0120737, tt0468569
+
+# library(curl)      # moved to start of the file
+# library(jsonlite)  # uncomment if needed (libraries not loaded)
+
+# from early experiment:
+# movieURL2 <- "http://www.omdbapi.com/?i=tt0120737&plot=short&r=json&tomatoes=true"  
+                # note: tomatoes seems to be retired and no longer returns data
+
+movE_data1 <- data.frame()
+
+get_json_movieRecord <- function(movieID, showRequest=FALSE) {
+  movieURL_start <- "http://www.omdbapi.com/?i="
+  movieURL_end <- paste0("&plot=short&r=json&tomatoes=true&apikey=", OMDBAPI_key)   # API Key needed for this to work!
+  moovURL <- paste0(movieURL_start, movieID, movieURL_end)
+  
+  if (showRequest == TRUE) {
+    print(paste("Sending request: ", moovURL)) 
+  }
+  as.data.frame(jsonlite::fromJSON(moovURL), stringsAsFactors=FALSE)[1, ]  # bug fix (are there dupes on the site?)
+               # each call was pulling back 3 copies of same record ... bug fix addresses this
+}
+
+# Used during debugging of data issues - Leave commented out:
+# ------
+# build initial data frame from first record:
+# movE_data1 <- get_json_movieRecord(IMDB_mvIDs[1,], TRUE)
+# movE_data1 <- get_json_movieRecord("tt0468569", TRUE)    # 37 cols
+# movE_data1 <- get_json_movieRecord("tt0000000", TRUE)  # 2 cols
+# movE_data1[ ,1:6]
+# print(paste0("Num Cols: ", NCOL(movE_data)))
+
+# movE_data1 <- get_json_movieRecord(IMDB_mvIDs$Movie_ID[1], TRUE)
+# movE_data1 <- get_json_movieRecord("tt0970179", TRUE)  t2049116
+
+
+movE_data1 <- get_json_movieRecord("tt2049116", TRUE)  
+movE_data1  # test of one record with the above function
+
+```
+
+Warning! - do not re-run this next cell w/o re-running previous cell first.  The two work together, and re-running
+just the cell that follows can result in duplicate data being created:
+
+```{r p5getDatawDelay, eval=TRUE, echo=TRUE}
+jsonRec = ""
+
+# Main cell that scrapes data from the OMDB open API to IMDB's website
+# You need to obtain a key from OMDB for this code to work
+
+# declare blank dfs of right size to make performance better / empty dfs caused error but only sometimes
+movE_data <- data.frame()               
+tmp_data <- data.frame()
+cnt <- 1
+dset <- 100
+
+fileNameEnd = "_OMDB_Detailed"
+fileNameO = paste0(fileNameStart, fileNameEnd, ".csv")
+fullFilePathO = paste0(filePath, fileNameO)
+
+for (i in IMDB_mvIDs$Movie_ID) {
+  # declared ahead of the loop and then added to within the loop
+  # in theory, this should yield better performance:
+  
+  # For ID:  tt5289954   cols unequal:  40   37 => turns out to be Star Wars Episode VII from 2015 (movie categorized as episode)
+  #          bug fix for this discrepency may be explored in later release (leaving these out for now)
+  
+  result = tryCatch({
+      tmp_data <- get_json_movieRecord(i) # will this always be df?
+  }, error = function(e) {
+      cat("Skipping: ", i, " Error processing it with json.\n")
+  })
+
+  if (ncol(tmp_data) == ncol(movE_data) | cnt == 1) {
+    if (cnt == 1) {
+      movE_data <- tmp_data
+    } else {
+      movE_data <- rbind(movE_data, tmp_data)  
+    }
+  } else {
+    if (ncol(tmp_data) > ncol(movE_data)) {
+      # movE_data <- rbind(movE_data, tmp_data[,1:ncol(movE_data)])  # needs more research - episodic data of 40 cols 
+                                                                     # for episodic movies may not be pracitcal to bring in yet
+      cat("For ID: ", i, "  cols unequal: ", ncol(tmp_data), " ", ncol(movE_data), "\n")
+    } else {
+      cat("For ID: ", i, "  cols unequal: ", ncol(tmp_data), " ", ncol(movE_data), "\n")
+      next 
+    }
+  }
+  
+  if (cnt %% 2 == 0) {   # Add delay to every other request ...
+    
+    cDelayRtn <- causeDelay(3.5)
+    
+    # debug lines: replace above with this to see delay messages:
+    # cDelayRtn <- causeDelay(3.7, TRUE) # message was not displaying so try to capture it
+    # print(paste0(i, ": "))
+    # print(cDelayRtn)
+  }
+  # if (cnt == 15) { break }  # debug line
+  if (cnt %% dset == 0) {
+    write.csv(movE_data, file=paste0(filePath, paste0(fileNameStart, fileNameEnd,cnt/dset,".csv")))
+      # in case of crashes, it will build smaller files along the way so we don't have to start all over again
+      # if successful, we get one large file
+      # if not - we can combine these, and edit the code to run from the last row it did before crashing
+      # cnt can be checked to see where it stopped
+    
+    cat(paste("Records processed so far: ", cnt, " ... last file: ", i, "\n")) # show some progress with an output message every 50 records 
+  }
+  cnt = cnt + 1
+}
+
+cat("Final count in loop: ", cnt, "\n")
+
+# movE_data <- distinct(movE_data)    # bug fix for trippling effect on records ...
+# movE_data
+# movE_data <- movE_data[seq(1,length(movE_data),3),]  # cluge bug fixes
+# movE_data <- unique(movE_data)
+
+# Write out Final File:
+# -----------------------
+write.csv(movE_data, file=fullFilePathO)
+
+# look at what we've written (quick checks)
+movE_data[1:6, 1:6]
+paste0("Number Rows: ", NROW(movE_data))
+paste0("Number Cols: ", NCOL(movE_data))
+
+```
+
+```{r p5fullOutput250mvs, echo=FALSE, eval=FALSE}
+# test cell for use with above ... to see what is writing to csv ...
+# some cells like this may get deleted when working with bigger data.
+
+movE_data
+movE_data$imdbID
+
+```
+
+#### For Future Research
+
+Misc. Reference URLs used initial creation of this code:
+
+ - http://www.dummies.com/programming/r/how-to-add-observations-to-a-data-frame-in-r/
+ - http://stackoverflow.com/questions/16408225/union-of-dataframes-in-r-by-rownames
+ - http://stackoverflow.com/questions/19379294/strange-behaviour-in-fromjson-in-rjsonio-package
+ - https://cran.r-project.org/web/packages/RJSONIO/RJSONIO.pdf
+ - tbd
+ 
+Future Research (neat tricks for converting numbers and reading csv):
+
+ - http://stackoverflow.com/a/1535082/7525365
+ - http://stackoverflow.com/a/3611619/7525365
+ - tbd
+ 
+ To expand this research - how others have done it:
+ 
+  - http://turingmachine.org/bl/2013-05-24-what-does-an-imdb-rating-of-a-movie-mean.html
+
+Repeating this comment from earlier in code to make it easier to find.  This script, when run for the IMDB Movie Data project
+originally output the list of files shown in this code cell:
+
+```{r fileList1}
+
+# from earlier web scraping
+# fileNameStart = "IMDB_Top250movies2"       # this set is top 250 or 100 on various pages of IMDB
+# fileNameStart = "IMDB_Top250Indianmovies2" #   may have some overlap with other top files
+# fileNameStart = "IMDB_Bottom250movies2"    #   is bottom so should be unique
+# fileNameStart = "IMDB_Top250Engmovies2"    #   lot of overlap w/ top 250 from this file
+                                             #   Note: kaggle data stops at 2016 - these lists are current
+                                             #         there
+
+# manually created from IDs in Kaggle 5000 data to use as input:
+# -----
+# fileNameStart = "TestDoc2_KaggleData"      # movie ids from link to git on Kaggle site
+# fileNameStart = "IMDB_OMDB_Kaggle_TestSet" # these files parse IDs extracted from github of kaggle poster
+# fileNameStart = "TestDoc2_KaggleData68"
+# fileNameStart = "TestDoc2_KaggleDataHUGE"
+
+```
+
+
+```{r, eval=FALSE, include=FALSE}
+
+# Source File Used to create this: MLA_Homework_Week3b_Web_Scraping_and_dplyer-cpy3.Rmd
+
+```
+

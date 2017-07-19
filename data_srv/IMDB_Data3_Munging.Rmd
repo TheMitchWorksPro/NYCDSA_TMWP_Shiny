@@ -1,0 +1,450 @@
+---
+title: "Shiny Project - IMDB - Data Preparation Step 3"
+author: "Mitch Abramson"
+date: "July, 2017"
+---
+
+# Shiny Project Notes
+
+This file began as scratch notes created early in the project development phase.  It may still be a little messy.
+Inputs to this script are the outputs of earlier "Data Munging" scripts.  Scripts were used to process the data in order of their
+file prifixes:  IMDB_Data1_, IMDB_Data2_, and IMDB_Data3 (this file) ...
+
+## TOC
+
+- [Data WorkFlow](#dataWorkFlow)
+- [Creation of Initial Project Data Files](#dataMunging)
+- [Files Under Consideration for Project - set 1](#set1)
+- [Files for Shiny Project Release 1](#set2)
+
+## Project Notes
+
+Misc. Project Notes begin here ...
+
+```{r setup, include=FALSE}
+# For help configuring this setup chunk: https://yihui.name/knitr/options/
+knitr::opts_chunk$set(echo = TRUE, root.dir="/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/", 
+                                   fig.path="rmd_files/NYCDSA_Wk_Day_Lec_Topic/figure/", 
+                                   cache.path="rmd_files/NYCDSA_Wk_Day_Lec_Topic/cache/")
+
+# cache = TRUE for loading big files in cells
+workingDirs = c("/Users/mitchmac/Documents/DS_BootCamp/course_materials/data/",      # should put data here ...
+                "/Users/mitchmac/Documents/DS_BootCamp/",                            # Class Notes Here
+                "/Users/mitchmac/Documents/DS_BootCamp/HW_Drafts/",                  # HW Working Folder
+                "/Users/mitchmac/Documents/DS_BootCamp/course_materials/",           # Course Materials
+                "/Users/mitchmac/Documents/DS_BootCamp/course_materials/Data_Visualization_Lab/", # vis lab 1
+                "/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/",   # project data: shiny app IMDB proj
+                "/Users/mitchmac/Documents/DS_BootCamp/course_materials/names/")     # names data files from HW (files by yr)
+
+```
+
+```{r setuplibs, warning=FALSE, eval=TRUE}
+# all libraries go here ... common ones may be commented out in this cell
+library(stringi)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(data.table)
+
+```
+
+```{r filePaths1}
+# note:  data.table is faster than dplyr is faster than base R
+getwd()
+workingDirs[1]
+
+```
+
+
+```{r c1fileChk}
+# early files check:  (files may have been reorganized since this was run)
+filesList <- list.files(path="/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/", pattern="*.csv")
+filesList
+
+```
+
+<a id="dataWorkFlow" name="dataWorkFlow"></a>
+
+### Understanding The Data
+
+- [metascore](http://www.metacritic.com/tv/salvation-2017?ref=hp) - comes from metacritic site (an amalgam of 10 critical reviewers' scores).
+- What IMDB says about their own data: [Amazon/IMDB Data](http://www.imdb.com/interfaces)
+
+### Data Selection - General Notes
+
+1. Scraping data directly from IMDB using an XML library got put on hold due to time constraints
+2. Amazon charges for the data and requires use of JAVA to access it - this project needs to explore techniques in R
+3. First Kaggle data set:  1000 records known to be from 2016 and before
+4. Second Kaggle data set: 5000+ records culled from IMDB and possibly fused with one or two other sources is selected
+5. OMDB API data scrapings and XML/Json code from Mitch's pre-work in R (needed bug-fixes and enahancement to use here)
+
+### The Data Workflow - Source Files and Their Creation:
+#### Directly from IMDB
+
+  1. IMDB - Top Movie List URLs used to scrape 4 or 5 columns into beginning source files:
+    a. movies_url       <- "http://www.imdb.com/chart/top"  # renamed to head off conflict w/ base 'url'
+    b. movies_url       <- "http://www.imdb.com/chart/bottom" 
+    c. movies_url       <- "http://www.imdb.com/chart/top-english-movies"
+    d. movies_url       <- "http://www.imdb.com/india/top-rated-indian-movies/"
+  
+  2. Use:  MLA_Homework_Week3a_Web_Scraping_and_dplyr-copy.Rmd to generate:
+    a. IMDB_Bottom250movies.csv
+    b. IMDB_Top250Indianmovies.csv
+    c. IMDB_Bottom250Engmovies.csv
+    d. IMDB_Top250Indianmovies.csv
+    e. Note:  These are movies based on all time rating.  There could be more or less popular movies that no one voted on (on the IMDB site)
+  3. Previous step - files have 5 fields: Movie_Title,	YR_Released,	Rating,	Num_Reviews,	Movie_ID
+  4. Manually edited into files ending in "2" - just added 1 column identifying source of data (this column is lost in later steps)
+    a. Example: IMDB_Bottom250movies2.csv
+  5. Used above files just for their movie ids in steps that follow
+  6. Used IDs from these Kaggle data sets (URLs provided here) to build input files for next process:
+    a. [Kaggle Project: IMDB Data from 2006 - 2016](https://www.kaggle.com/PromptCloudHQ/imdb-data)
+    b. [Kaggle Project: IMDB 500 Movie Data Set (data also from 2016 and Earlier)](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset)
+      1. This site had a link to a github with a [json](https://github.com/sundeepblue/movie_rating_prediction/blob/master/fetch_imdb_url.json) file that IDs were manually extracted from instead
+  7. Use:  MLA_Homework_Week3b_Web_Scraping_and_dplyr-cpy3.Rmd 
+    a. An interative process ensued where IDs were assembled into input files, the files were run through a script that used the OMDB Open API to pull down records with 30+ variables for each ID and data files were created for use in this project.
+    b. Errors were investigated and new files created to run through better versions of the scripts to get more data
+    c. Each iteration output messages about IDs it could not convert to data from the site and most were investigated and fixed
+    d. The source for the API is a $1 a month subscription to the OMDB Open API site by Brian Fritz:
+      1. [OMDB Open API - Try it Out Home Page](http://www.omdbapi.com/)
+      2. [Donate $1 or More Per month for API Key](http://www.omdbapi.com/apikey.aspx)
+      3. Subscriptions are managed through this site after you donate at above link: [subscription site](https://www.patreon.com/pledges)<br/>
+    e. Input files to R Markdown script from interative process described above:
+      1. generated from previous script (w/ one file Identifier column added manually):
+        1.  "IMDB_Bottom250movies2.csv"                  
+        2.  "IMDB_Top250Engmovies2.csv"                 
+        3.  "IMDB_Top250Indianmovies2.csv"               
+        4.  "IMDB_Top250movies2.csv" 
+      2. created using software tricks in Excel and text editors from the Kaggle 5000 data set (json file and process above):
+        5.  "IMDB_OMDB_Kaggle_TestSet.csv" - test sets while debugging and ahead of the "huge file"             
+        6.  "TestDoc2_KaggleData.csv"
+        7.  "TestDoc2_KaggleData68.csv"
+        8.  "TestDoc2_KaggleDataHUGE.csv" - most of the data
+        9.  "IMDB_ErrorLogIDs1.csv" - IDs from error logs to try again and get the data                  
+        10. "IMDB_ErrorLogIDs2.csv"<br/>
+    f. Output Files (from earlier processes) to be used as inputs to the Shiny Project (this will be treated as "raw data" in the project):
+        1.  "IMDB_Bottom250movies2_OMDB_Detailed.csv"                  
+        2.  "IMDB_Top250Engmovies2_OMDB_Detailed.csv"                 
+        3.  "IMDB_Top250Indianmovies2_OMDB_Detailed.csv"               
+        4.  "IMDB_Top250movies2_OMDB_Detailed.csv"                    
+        5.  "IMDB_OMDB_Kaggle_TestSet_OMDB_Detailed.csv"               
+        6.  "TestDoc2_KaggleData_OMDB_Detailed.csv"
+        7.  "TestDoc2_KaggleData68_OMDB_Detailed.csv"
+        8.  "TestDoc2_KaggleDataHUGE_OMDB_Detailed.csv" 
+        9.  "IMDB_ErrorLogIDs1_OMDB_Detailed.csv"                      
+        10. "IMDB_ErrorLogIDs2_OMDB_Detailed.csv"
+        
+At the end of this script, the only files actually used in the shiny project are listed.
+      
+### Original Scratch Notes on Data Sources
+#### Movies/ IMDB - Downloaded Data
+#### Kaggle
+movies_metadata.csv (signed up for Kaggle to get it)
+
+  - [IMDB 5000 Web Scraped Records: Kagel](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset)
+    - [Discussion Thread:  EDA involving movie length, rating, money](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset/discussion/32880)
+    - [Discussion Thread:  Problems with the Data](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset/discussion/32788)
+    - has budget, gross, facebook likes, director, has 3 main actors in 3 columns (used for project)
+
+IMDB-Movie-Data (Kaggle)
+
+  - [1000 Popular IMDB Movies: 2006 - 2016](https://www.kaggle.com/PromptCloudHQ/imdb-data)  
+    - has revenue and metascore as well as IMDB score, has a list of actors in a single cell (not used for project)
+  
+Abandoned: Not useful to me in terms of data sets:
+
+  - http://ai.stanford.edu/~amaas/data/sentiment/
+
+### Links On IMDB / OMDB
+
+  - IMDB Links in my R Pre-work on XML based webscraping
+  - [IMDB:  Highlevel Explanation of its Data Model on Amazon](http://www.imdb.com/interfaces)
+  - [IMDB - Where Do You Get Your Data? / How Accurate?](http://www.imdb.com/help/show_leaf?infosource)
+
+Not Used Yet:
+
+  - http://www.boxofficemojo.com/alltime/?page=byrecord&p=.htm
+
+Other Peoples' Movie Analysis:
+
+  - https://www.linkedin.com/pulse/analyzing-imdb-movie-dataset-preetish-panda
+
+<a id="dataMunging" name="dataMunging"><a/>
+
+## Data Munging
+
+```{r c2}
+
+filesList <- list.files(path="/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/", pattern="*.csv")
+
+best_worst_dset <- data.table()
+# tmp <- sapply(filesList[order(filesList)], print)
+# names(tmp)
+
+getwd()
+dataDir <- "/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/"
+workingFile <- paste0(dataDir, "file.tbd")  # test
+workingFile
+dataDir
+
+```
+
+```{r c3, root.dir="/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data/"}
+
+# setwd("/Users/mitchmac/Documents/DS_BootCamp/projects/shiny_imdb/data")
+
+IMDB_hotlist_files <- c("IMDB_Bottom250movies2.csv",                  
+                        "IMDB_Top250Engmovies2.csv",                 
+                        "IMDB_Top250Indianmovies2.csv",               
+                        "IMDB_Top250movies2.csv" )   # this is a vector
+
+IMDB_hotlists <- data.table()
+# function(x) <- { rbind(IMDB_hotlists, data.table::fread(x)) }  #stringsAsFactors=FALSE is default
+
+mergeLikeFrameFiles <- function(inputFileList) {
+  # https://www.stat.berkeley.edu/~s133/Docall.html
+  allframes = lapply(inputFileList,function(x)fread(paste0(dataDir, x)))      # changed from read.csv
+  # sapply(allframes,nrow)  # debugging Line
+  answer = do.call(rbind,allframes)  # does not "simplify" to martices, etc.
+  # nrow(answer) debug line
+  return(answer)
+}
+
+IMDB_hotlists <- mergeLikeFrameFiles(IMDB_hotlist_files)
+IMDB_hotlists <- IMDB_hotlists %>% select(-V1)
+# IMDB_hotlists
+head(IMDB_hotlists)
+tail(IMDB_hotlists)
+nrow(IMDB_hotlists)
+IMDB_hotlists <- unique(IMDB_hotlists)  # note: we will have dupes anyway because the list record comes from is identified
+nrow(IMDB_hotlists)
+unique(IMDB_hotlists$Record)
+fwrite(IMDB_hotlists, paste0(dataDir, "IMDBdata_hotlists.csv"))
+
+```
+
+```{r c4}
+
+IMDB_multiSrc_data <- c("IMDB_Bottom250movies2_OMDB_Detailed.csv",    # hotlist data (no file ID col) + 30+ OMDB/IMDB Cols              
+                        "IMDB_Top250Engmovies2_OMDB_Detailed.csv",                 
+                        "IMDB_Top250Indianmovies2_OMDB_Detailed.csv",               
+                        "IMDB_Top250movies2_OMDB_Detailed.csv",       
+                        "IMDB_OMDB_Kaggle_TestSet_OMDB_Detailed.csv",
+                        "TestDoc2_KaggleData_OMDB_Detailed.csv",      # IDs from Kaggle 5000 Data Set + 38 cols OMDB/IMDB Cols                       
+                        "TestDoc2_KaggleData68_OMDB_Detailed.csv",                     
+                        "TestDoc2_KaggleDataHUGE_OMDB_Detailed.csv", 
+                        "IMDB_Bottom250movies2_OMDB_Detailed.csv",   
+                        "IMDB_Top250movies2_OMDB_Detailed.csv",       
+                        "IMDB_Top250Indianmovies2_OMDB_Detailed.csv",
+                        "IMDB_Top250Engmovies2_OMDB_Detailed.csv"   
+)   # this is a vector
+
+IMDBdat_MainData <- mergeLikeFrameFiles(IMDB_multiSrc_data)
+IMDBdat_MainData <- IMDBdat_MainData %>% select(-V1, -starts_with("tomato"), tomatoURL)
+# IMDBdat_MainData
+head(IMDBdat_MainData)
+tail(IMDBdat_MainData)
+paste0("Rows (b4 unique): ", nrow(IMDBdat_MainData))
+IMDBdat_MainData <- unique(IMDBdat_MainData)
+paste0("Rows: ", nrow(IMDBdat_MainData))
+paste0("Cols: ", ncol(IMDBdat_MainData))
+names(IMDBdat_MainData)
+fwrite(IMDBdat_MainData, paste0(dataDir, "IMDBdata_MainData.csv"))
+
+```
+
+
+```{r fewMoreTests}
+
+str(IMDBdat_MainData)
+length(unique(IMDBdat_MainData$imdbID))
+length(IMDBdat_MainData$imdbID)
+
+```
+
+```{r lastFilesToMerge1}
+
+# will final bits of data merge?
+
+IMDBdat_MoreData1 <- data.table::fread(paste0(dataDir,"IMDB_ErrorLogIDs1_OMDB_Detailed.csv")) # default: stringsAsFactors=FALSE
+IMDBdat_MoreData1 <- IMDBdat_MoreData1 %>% select(-V1, -starts_with("tomato"), tomatoURL)
+# head(IMDBdat_MoreData1)
+
+IMDBdat_MoreData2 <- data.table::fread(paste0(dataDir,"IMDB_ErrorLogIDs2_OMDB_Detailed.csv")) # default: stringsAsFactors=FALSE
+IMDBdat_MoreData2 <- IMDBdat_MoreData2 %>% select(-V1, -starts_with("tomato"), tomatoURL)
+# head(IMDBdat_MoreData2)
+
+print("col compare:")
+ncol(IMDBdat_MoreData1)
+ncol(IMDBdat_MoreData2)
+ncol(IMDBdat_MainData)
+
+cat("\nColumnLists:\n")
+names(IMDBdat_MoreData1)
+cat("\n")
+names(IMDBdat_MoreData2)
+cat("\n")
+names(IMDBdat_MainData)
+
+```
+
+```{r, fixLastFiles}
+
+IMDBdat_MoreData1 <- IMDBdat_MoreData1 %>% select(-totalSeasons)
+IMDBdat_MoreData2 <- IMDBdat_MoreData2 %>% select(-seriesID, -Season, -Episode)
+ncol(IMDBdat_MoreData1)
+ncol(IMDBdat_MoreData2)
+
+```
+
+
+
+```{r c6}
+# adding last data to MainData:
+
+# rbind 3 variables
+# fwrite it out replacing the old file ...
+# rbind(target_l, tables_to_bind_to_it)
+
+IMDBdat_MainData <- rbind(IMDBdat_MoreData1, IMDBdat_MoreData2, IMDBdat_MainData)
+fwrite(IMDBdat_MainData, paste0(dataDir, "IMDBdat_MainData.csv"))
+head(IMDBdat_MainData)
+tail(IMDBdat_MainData)
+nrow(IMDBdat_MainData)
+ncol(IMDBdat_MainData)
+
+# we now have two R variables representing two tables
+
+
+```
+
+
+```{r c7, eval=FALSE}
+# Little bit of cleaning:
+# IMDBdat_MainData IMDBdat_hotlists
+# issue knitting ... output suppressed during HTML generation but code still output
+
+IMDB_hotlists <- fread(paste0(dataDir, "IMDBdat_hotlists.csv"), na.strings=c(""," ","NA"))
+IMDB_hotlists    # shold be fine already but just in case ...
+
+```
+
+
+```{r c8}
+
+IMDBdat_MainData <- fread(paste0(dataDir, "IMDBdat_MainData.csv"), na.strings=c(""," ","NA"))
+IMDBdat_MainData
+names(IMDBdat_MainData)
+
+```
+
+
+```{r c11, eval=FALSE}
+# # can we get our hotList table fields from the larger data?
+# kaggle data has more than movies ... filter addresses this (tv series filtered out)
+# Issue Knitting ... output suppressed in HTML file but code is shown ...
+
+IMDB_Main_hotlistFields <- IMDBdat_MainData %>% filter(., Type=="movie") %>%
+  select(Movie_Title = Title, YR_Released = Released, Rating = imdbRating, Num_Reviews = imdbVotes, Movie_ID = imdbID, Runtime) %>%
+  mutate(YR_Released = as.integer(substr(YR_Released, nchar(YR_Released)-4, nchar(YR_Released))), 
+         ., Record = "Kaggle 5000 Project IDs",                      
+         Num_Reviews = as.integer(gsub(",", "", IMDB_Main_hotlistFields$Num_Reviews)), 
+         Runtime = as.integer(substr(Runtime, 1, nchar(Runtime)-4)))
+                           
+head(IMDB_Main_hotlistFields)
+nrow(IMDB_Main_hotlistFields)
+
+fwrite(IMDB_hotlists, paste0(dataDir, "IMDBdata_Main_Hflds.csv"))  # testing indicates work is preserved in the resulting data in our csv
+
+```
+
+
+```{r c12}
+
+# hotlists built from wrong files ... forgot duraion (Runtime) field.  Addressing this in cells that follow
+# cell 1:
+
+IMDB_hotlist_details_files <- c("IMDB_Bottom250movies2_OMDB_Detailed.csv",                  
+                        "IMDB_Top250Engmovies2_OMDB_Detailed.csv",                 
+                        "IMDB_Top250Indianmovies2_OMDB_Detailed.csv",               
+                        "IMDB_Top250movies2_OMDB_Detailed.csv" )
+
+IMDBdat_hotlist_durations <- mergeLikeFrameFiles(IMDB_hotlist_details_files)
+IMDBdat_hotlist_durations <- IMDBdat_hotlist_durations %>% select(Movie_ID=imdbID, Runtime)
+# IMDBdat_MainData
+head(IMDBdat_hotlist_durations)
+tail(IMDBdat_hotlist_durations)
+paste0("Rows (b4 unique): ", nrow(IMDBdat_hotlist_durations))
+IMDBdat_hotlist_durations <- unique(IMDBdat_hotlist_durations)
+paste0("Rows: ", nrow(IMDBdat_hotlist_durations))
+paste0("Cols: ", ncol(IMDBdat_hotlist_durations))
+names(IMDBdat_hotlist_durations)
+
+fwrite(IMDBdat_hotlist_durations, paste0(dataDir, "IMDBdata_hotlist_durations.csv"))
+
+```
+
+
+```{r c13}
+
+# hotlists built from wrong files ... forgot duraion (Runtime) field.  Addressing this in cells that follow
+# cell 2:
+# head(IMDBdat_hotlist_durations)
+# head(IMDB_hotlists)
+
+IMDB_hotlists <- left_join(IMDB_hotlists, IMDBdat_hotlist_durations, by="Movie_ID") %>% mutate(., Runtime = as.integer(substr(Runtime, 1, nchar(Runtime)-4)))
+fwrite(IMDB_hotlists, paste0(dataDir, "IMDBdata_hotlist2.csv"))
+head(IMDB_hotlists)
+nrow(IMDB_hotlists)
+
+```
+
+<a id="set1" name="set1"></a>
+
+Files for consideration in project:
+
+  1. IMDBdata_MainData.csv    - 27 columns, 5000+ observations from IMDB
+  2. IMDBdata_Main_Hflds.csv  - Just fields from Main that apply to Runtime analysis and a few review fields)
+  3. IMDBdata_hotlist2.csv    - Top 250, Bottom 250, etc. - Just Runtime Analysis and a few review fields
+  4. IMDBdata_hotlist_durations.csv  - used in joins (just Movie_ID, Runtime)
+  5. IMDBdata_hotlists.csv    - early draft of hotlist, missing Runtime
+
+<a id="set2" name="set2"></a>
+  
+Files used for prjoect - first release:
+
+  1. IMDBdata_Main_Hflds.csv  - Just fields from Main that apply to Runtime analysis and a few review fields)
+  2. IMDBdata_hotlist2.csv    - Top 250, Bottom 250, etc. - Just Runtime Analysis and a few review fields
+
+
+```{r c14, eval=FALSE, include=FALSE}
+
+# uncomment this cell if continuing with code beyond this point ...
+
+# make sure process did not introduce new missing data that needs to be NA:
+# IMDB_hotlists <- fread(paste0(dataDir, "IMDBdat_hotlists2.csv"), na.strings=c(""," ","NA"))
+
+# Research Note: development file name was: MitchA_ShinyProj_Notes2.Rmd
+
+```
+
+
+```{r c15}
+
+```
+
+
+```{r c16}
+
+```
+
+
+```{r c17}
+
+```
+
+
+```{r c18}
+
+```
+
