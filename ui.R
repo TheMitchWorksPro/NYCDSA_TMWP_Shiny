@@ -22,7 +22,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     sidebarUserPanel("TheMitchWorksPro", subtitle ="(TMWP)", image = appImages[3]),  # image 3: movie slate icon
     # note: "dashboard is required first tab:  edit but do not change tabName or delete:
-    menuItem("About This App", tabName = "dashboard", icon = icon("imdb")),  # original icon: "dashboard"
+    menuItem("Home", tabName = "dashboard", icon = icon("imdb")),  # original icon: "dashboard"
     menuItem("Data", tabName = "data", icon = icon("database")),
       # menuSubItem("Sub-item 1", tabName = "subitem1"),
       # menuSubItem("Sub-item 2", tabName = "subitem2"),
@@ -74,8 +74,7 @@ body <- dashboardBody(
      ), 
 
      tabItem(tabName = "data", 
-            # in lieue of conditionality on sidebar research:
-            # add in simple histogram bar chart: x = record, then hook color drop-down to it
+            # simple histogram bar chart: x = record, then hook color drop-down to it
             fluidRow(h1("IMDB Movie Data"), hr(class="mainBxhr"),
               box(width=4, tableOutput("datRecSum"),
               # invisible table to stop "fluid motion" on this element
@@ -102,7 +101,7 @@ body <- dashboardBody(
              ),
              fluidRow(
                # wellPanel(id = "tPanel", style = "overflow-x:scroll; max-width: 920px",
-             
+               # supposed to add scroll bars ... did not work
               
                  tags$table(tags$tr(
                    tags$td(width="20px", valign="Top",
@@ -110,11 +109,14 @@ body <- dashboardBody(
                       verbatimTextOutput("datRecSum2"), br(),
                       verbatimTextOutput("datRecSum2b"), br() # ,     # ,
                       # verbatimTextOutput("datRecSum2c"), br(),  # formatting issue
-                      # verbatimTextOutput("datRecSum2d"), br()   # return to this later
+                      # verbatimTextOutput("datRecSum2d"), br()   # return to this later (keep 2 col sets for now)
+                      
+                      # idea:  develop this when there is content to hide ...
                       # actionButton(inputId="moreInfo1", label="Would You Like To Know More? ...", icon=map)
                       ),
                    tags$td(width="700", valign="Top", h2("Movie Duration (Runtime) Over Time"),
-                           plotOutput("ggpltRT1"))  # YR Released / Avg Runtime
+                           plotOutput("ggpltRT1"),       # YR Released / Avg Runtime line plot
+                           div(p(class="bodyText", br(), intro_movieRunTimeAnalysis),br()))
                  )  
              ) 
      ) # ) ## fluidRow wellpanel (commented out)

@@ -10,6 +10,7 @@
 # library(DT)
 # library(shiny)
 library(ggplot2)
+library(grid)  # for x and y axis tickmarks
 
 # library(googleVis)
 # suppressPackageStartupMessages(library(googleVis))
@@ -20,9 +21,6 @@ dataMaxYr <- max(IMDB_Main_tl_flds$YR_Released, na.rm=TRUE)
 
 # Record set summary for Data Tab (shows true record count for reach data set in use)
 recSummary <- IMDB_AllData %>% group_by(.,Record) %>% summarise(.,recCount = n())
-
-# mv_byEachYr <- group_by(IMDB_AllData, YR_Released) %>% 
-#   summarise(., avgRunTime = round(mean(Runtime)), na.rm = TRUE)
 
 # Reusable Globals:
   
@@ -51,7 +49,10 @@ shinyServer(function(input, output){
     movieFreqByYrHist2 <- ggplot(IMDB_Main_tl_flds, aes_string(x = "YR_Released")) +
       geom_histogram(colour = "navy", fill = input$colorSlxn, binwidth = input$histBin) +
       labs(title=paste0("Histogram: ", input$histBin," Year Bins")) +
-      labs(x="Year", y="Releases") + theme_bw()
+      labs(x="Year", y="Releases") + theme_bw() +
+      # scale_y_continuous(breaks=seq(0, 350, 10)) +
+      scale_x_continuous(breaks=seq(1910, 2020, 10))
+    
 
     movieFreqByYrHist2
   })
@@ -124,9 +125,11 @@ shinyServer(function(input, output){
   
     g_rby <- ggplot(data = ggplot_rt_data_set1(), aes(y = avgRunTime, x = YR_Released)) + 
       geom_smooth(colour=input$colorSlxn) + 
-      geom_point(na.rm=TRUE) + xlab("Year Released") + ylab("Duration (Runtime in Minutes)") #  + xlim() + ylim()
+      geom_point(na.rm=TRUE) + xlab("Year Released") + ylab("Duration (Runtime in Minutes)") + 
+      scale_y_continuous(breaks=seq(0, 350, 10)) +
+      scale_x_continuous(breaks=seq(1910, 2020, 10))
     
-    g_rby
+    g_rby  # rby = runtime by year
   })
 
   # dashboard items that are just links to other sites

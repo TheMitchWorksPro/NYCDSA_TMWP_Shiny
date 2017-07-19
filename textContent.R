@@ -23,9 +23,9 @@ sourceDataBlurb2 <-"'Data World.'"                   # wrap this in hyperlinks i
 srcDatBlurb3 <- " Files used in this project are: "  # follow this with variables storing filenames from code
 
 intro_movieRunTimeAnalysis <- paste0(
-  "When I studied screenwriting for my undergraduate degree, students were encouraged to limit their ", 
-  "feature length movie scripts to 129 pages. Years Later, I learned that for beginning writers, this ", 
-  "recommendation had dropped to 90 pages. Most recently, a former professor of mine revised the number ",
-  "yet again to a 'sweet spot' of 110 pages. On average, each page of a screenplay equates to one minute of ",
+  "When I studied screenwriting for my undergraduate degree, students were advised to make their ", 
+  "feature length movie scripts between 90 and 129 pages. Years Later, this recommendation fell to an end ", 
+  "target of just 90 pages. Most recently, a former professor of mine revised the number ",
+  "yet again.  The new 'sweet spot' is 110 pages. On average, each page of a screenplay equates to one minute of ",
   "screen time.  Are these numbers just arbritary or is there something to these guidelines? ")
 

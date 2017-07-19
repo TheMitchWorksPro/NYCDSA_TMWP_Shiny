@@ -7,8 +7,9 @@
 ###     For What Writers Care About        ###
 ##############################################
 
+# v 1.1
 # v1 published on shiny.io under this app name: TMWP Shiny App - IMDB
-#    this url:  
+#    this url:  https://themitchworkspro.shinyapps.io/tmwp_shiny_app_-_imdb/
 
 # library(stringi)
 # library(stringr)
