@@ -10,7 +10,7 @@ output: html_document
 The [OMDB API](http://www.omdbapi.com/) is an open API to IMDB.  IMDB neither supports nor endorses its usage.
 You will need to go to their website and get an API key if you want to edit and reuse this code.  This code was used in step 2 of the process of data prep for the Shiny IMDB Movies Data project.  A good example movie to use in testing is "Shawshank Redemption" which has a test URL like this:
 
-http://www.omdbapi.com/?t=the+shawshank+redemption&y=1994&type=movie, ... see PDF for JSON example.
+http://www.omdbapi.com/?t=the+shawshank+redemption&y=1994&type=movie
 
 The above URL generates a JSON file which this code then parses into a spreadsheet record.  Records have to be obtained one at a time
 through the API, so the delay code with a recommended setting of at least 3 seconds between each record is recommended.  This is to prevent
@@ -34,8 +34,8 @@ getwd()
 
 library(RCurl)
 library(XML)
-library(dplyr)   # need dplyer or magrittr for %>%
-library(ggplot2) # used in answer to problem 8
+library(dplyr)    # need dplyer or magrittr for %>%
+library(ggplot2) 
 library(RCurl)
 library(RJSONIO)
 library(curl)     # issues w/ RJSOJIO resulted in these libraries being added
@@ -350,7 +350,7 @@ originally output the list of files shown in this code cell:
 
 ```{r, eval=FALSE, include=FALSE}
 
-# Source File Used to create this: MLA_Homework_Week3b_Web_Scraping_and_dplyer-cpy3.Rmd
+# Mitch Note: input - b_cpy3 file
 
 ```
 

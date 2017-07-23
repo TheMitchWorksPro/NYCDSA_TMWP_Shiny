@@ -7,8 +7,7 @@ date: "July, 2017"
 # Shiny Project Notes
 
 This file began as scratch notes created early in the project development phase.  It may still be a little messy.
-Inputs to this script are the outputs of earlier "Data Munging" scripts.  Scripts were used to process the data in order of their
-file prifixes:  IMDB_Data1_, IMDB_Data2_, and IMDB_Data3 (this file) ...
+Inputs to this script are the outputs of earlier "Data Munging" scripts.  Scripts were used to process the data in this order:  IMDB_Data1_Munging.Rmd, IMDB_Data2_Munging_w_OMDB.Rmd, and IMDB_Data3_Munging.Rmd (this file) ...
 
 ## TOC
 
@@ -86,8 +85,7 @@ filesList
     b. movies_url       <- "http://www.imdb.com/chart/bottom" 
     c. movies_url       <- "http://www.imdb.com/chart/top-english-movies"
     d. movies_url       <- "http://www.imdb.com/india/top-rated-indian-movies/"
-  
-  2. Use:  MLA_Homework_Week3a_Web_Scraping_and_dplyr-copy.Rmd to generate:
+  2. Use:  IMDB_Data1_Munging.Rmd to generate:
     a. IMDB_Bottom250movies.csv
     b. IMDB_Top250Indianmovies.csv
     c. IMDB_Bottom250Engmovies.csv
@@ -101,7 +99,7 @@ filesList
     a. [Kaggle Project: IMDB Data from 2006 - 2016](https://www.kaggle.com/PromptCloudHQ/imdb-data)
     b. [Kaggle Project: IMDB 500 Movie Data Set (data also from 2016 and Earlier)](https://www.kaggle.com/deepmatrix/imdb-5000-movie-dataset)
       1. This site had a link to a github with a [json](https://github.com/sundeepblue/movie_rating_prediction/blob/master/fetch_imdb_url.json) file that IDs were manually extracted from instead
-  7. Use:  MLA_Homework_Week3b_Web_Scraping_and_dplyr-cpy3.Rmd 
+  7. Use:  , IMDB_Data2_Munging_w_OMDB.Rmd 
     a. An interative process ensued where IDs were assembled into input files, the files were run through a script that used the OMDB Open API to pull down records with 30+ variables for each ID and data files were created for use in this project.
     b. Errors were investigated and new files created to run through better versions of the scripts to get more data
     c. Each iteration output messages about IDs it could not convert to data from the site and most were investigated and fixed
@@ -134,7 +132,7 @@ filesList
         9.  "IMDB_ErrorLogIDs1_OMDB_Detailed.csv"                      
         10. "IMDB_ErrorLogIDs2_OMDB_Detailed.csv"
         
-At the end of this script, the only files actually used in the shiny project are listed.
+These files were then used in this script (IMDB_Data3_Munging.Rmd).  Final output of this script is provided at the end of this document.
       
 ### Original Scratch Notes on Data Sources
 #### Movies/ IMDB - Downloaded Data

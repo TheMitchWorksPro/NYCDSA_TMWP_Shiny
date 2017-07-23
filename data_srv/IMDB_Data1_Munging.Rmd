@@ -175,10 +175,3 @@ data originated from so we can track this later in our process and for use in th
 
 A future edit of this code should probably automate this step.
 
-```{r, eval=FALSE, include=FALSE}
-
-# source file for this content from past effort:
-# MLA_Homework_Week3a_Web_Scraping_and_dplyer-copy.Rmd (or maybe without "-copy")
-
-```
-
