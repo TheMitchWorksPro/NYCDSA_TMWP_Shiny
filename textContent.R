@@ -27,7 +27,7 @@ intro_movieRunTimeAnalysis <- paste0(
   "feature length movie scripts between 90 and 129 pages. Years Later, this recommendation fell to an end ", 
   "target of just 90 pages. Most recently, a former professor of mine revised the number ",
   "yet again.  The new 'sweet spot' is 110 pages. On average, each page of a screenplay equates to one minute of ",
-  "screen time.  Are these numbers just arbritary or is there something to these guidelines? ")
+  "screen time.  Are these numbers just arbitrary or is there something to these guidelines? ")
 
 aboutDataOnVis <- paste0(
   "The 'Kaggle 5000' data was created by extracting movie IDs from over 5000 records posted on Kaggle ",

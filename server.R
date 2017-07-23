@@ -19,7 +19,7 @@ shinyServer(function(input, output){
 
   # main panel items (visible when dashboard icon is selected)
   output$mvFrqYrHst2 <- renderPlot({ 
-    bins_data <- seq(dataMinYr, generate_YrSeqEnd(input$histBin), input$histBin)  
+    # bins_data <- seq(dataMinYr, generate_YrSeqEnd(input$histBin), input$histBin)  
     
     movieFreqByYrHist2 <- ggplot(IMDB_Main_tl_flds, aes_string(x = "YR_Released")) +
       geom_histogram(colour = "navy", fill = input$colorSlxn, binwidth = input$histBin) +
@@ -64,13 +64,18 @@ shinyServer(function(input, output){
     return(IMDB_AllNUmericDatSum)
   })
   
+  output$rowCount <- renderPrint({
+    ncount <- IMDB_AllData %>% filter(., Record==input$dataSlxn) %>% nrow()
+    paste0(ncount, ' observations.')
+  })
+  
   output$datRecSum2 <- renderPrint ({
     # IMDB_AllNUmericDatSum[, c(1,4)]  
-    summary_data_set1()[ , c(1,2)]
+    summary_data_set1()[ , c(1,2)]      # 1,2
   })
 
   output$datRecSum2b <- renderPrint ({
-    summary_data_set1()[ , c(4,3)]
+    summary_data_set1()[ , c(4,3)]     # 4,3
   })
   
   output$datRecSum2c <- renderPrint ({

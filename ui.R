@@ -107,8 +107,8 @@ body <- dashboardBody(
                  tags$table(tags$tr(
                    tags$td(width="20px", valign="Top",
                       h2("Data Summary:"),
-                      verbatimTextOutput("datRecSum2"), br(),
-                      verbatimTextOutput("datRecSum2b"), br() #,
+                      verbatimTextOutput("datRecSum2"),  br(),
+                      verbatimTextOutput("datRecSum2b"), verbatimTextOutput("rowCount"), br() #,
                       # verbatimTextOutput("datRecSum2c"), br(),  # formatting issue
                       # verbatimTextOutput("datRecSum2d"), br()   # return to this later (keep 2 col sets for now)
                       
